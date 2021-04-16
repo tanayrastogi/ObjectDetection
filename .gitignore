@@ -348,3 +348,9 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# Ignoring all the Visual Code files
+.vscode/
+
+# Ignore the model files
+ObjectDetection/models/
