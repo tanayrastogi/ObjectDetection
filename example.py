@@ -30,7 +30,7 @@ model = obj.TensorflowModel(modelname, proto, graph, classes,
                                mask_threshold=mask_threshold)
 
 # Load image
-image = cv2.imread("example_01.jpg")
+image = cv2.imread("image.png")
 detections = model.detect(image, "Test Image")
 
 # For showing output
