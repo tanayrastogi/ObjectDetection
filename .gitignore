@@ -351,3 +351,6 @@ MigrationBackup/
 
 # Ignoring all the Visual Code files
 .vscode/
+
+# Ignoring model files
+ObjectDetection/models/

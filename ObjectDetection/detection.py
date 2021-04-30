@@ -55,7 +55,7 @@ class TensorflowModel:
         proto_filepath = os.path.join(model_directory, proto_filename)
         class_filepath = os.path.join(model_directory, classes_filename)
         graph_filepath = os.path.join(model_directory, frozengraph_filename)
-        
+
         # First check if the files exits
         if not os.path.isdir(model_directory):
             raise Exception("Model dir does not exits! Please create a folder in ./model/{}".format(model_filename))
@@ -109,13 +109,31 @@ class TensorflowModel:
         print("Creating blob, ", end=" ")
         blob = cv2.dnn.blobFromImage(image, swapRB=True, crop=False)
         self.MODEL.setInput(blob)
-        print("Getting predictions, ", end=" ")
-        detections = self.MODEL.forward()
+        print("Getting predictions", end=" ")
 
+        # Choose the detection based on the type of metwork
+        if self.modelname == "mask-rcnn-coco":
+            print("from mask rcnn, ...", end=" ")
+            (detections, masks) = self.MODEL.forward(["detection_out_final", "detection_masks"])
+        elif self.modelname == "faster_rcnn_inception_v2_coco_2018_01_28":
+            print("from f-rcnn, ...", end=" ")
+            detections = self.MODEL.forward()
+        else:
+            print("from unknow model, ...", end=" ")
+            detections = self.MODEL.forward()
+        print("Done!")
+
+        print("[ObjD] Detections shape: {}".format(detections.shape))
+        if self.modelname == "mask-rcnn-coco":
+            print("[ObjD] Masks shape: {}".format(masks.shape))
+        
         # After getting all the detections, gathreing label and bounding box.
         # based on base_confidence level and classes_to_detect
+        print("\n[ObjD] Checking detections on confidence level ", self.BASE_CONFIDENCE, " ...", end=" ")
         detections = detections[0, 0]
-        for detection in detections:
+        for itr in range(len(detections)):
+            # Get the detection
+            detection = detections[itr]
             # Get the confidence level in the detection
             confidence = float(detection[2])
 
@@ -126,7 +144,7 @@ class TensorflowModel:
                 # Box dimensions for detection
                 box = detection[3:7] * np.array([width, height, width, height])
                 (startX, startY, endX, endY) = box.astype("int")
-
+                
                 # Check if the classes are in the considered group
                 if self.CLASSES[class_id] in self.CLASSES_TO_DETECT:
                     # Add to the detection list 
@@ -139,6 +157,17 @@ class TensorflowModel:
 
 
 if __name__ == "__main__":
-    pass
+    # # MODEL PARAMETERS
+    modelname = "mask-rcnn-coco"
+    proto     = "mask_rcnn_inception_v2_coco_2018_01_28.pbtxt"
+    classes   = "object_detection_classes_coco.txt"
+    graph     = "frozen_inference_graph.pb"
+    base_confidence=0.5
+    classes_to_detect=["person", "car"]
 
-    
+    # Model
+    model = TensorflowModel(modelname, proto, graph, classes,
+                                base_confidence, classes_to_detect)
+
+    image = cv2.imread("/mnt/d/Projects/Image_Processing/03_Modules/ObjectDetection/image.png")
+    detections = model.detect(image, "Test Image")
