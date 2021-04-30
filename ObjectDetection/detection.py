@@ -5,7 +5,7 @@ import cv2
 
 class TensorflowModel:
     def __init__(self, modelname, proto_filename, frozengraph_filename, classes_filename,
-                base_confidence=0.6, classes_to_detect=["person", "car"]):
+                base_confidence=0.6, classes_to_detect=["person", "car"], mask_threshold=0.1):
 
         """
         INPUTS:
@@ -16,12 +16,14 @@ class TensorflowModel:
             base_confidence(float)           :The confidence level to accept the detection by the model.
                                               Eg. confidence of 0.6 means any detection which has detection prob more that 0.6 will be considered. 
             classes_to_detect(list[str, ..]) :List of classes that will be considered for the model. They should be in the label list.
+            mask_threshold(float)            :Threshold for the bitwise mask when we use Mask RCNN. 
         """
     
         # Model Parmaters
         self.BASE_CONFIDENCE   = base_confidence       # Base Confidence for the Object Detection
         self.CLASSES_TO_DETECT = classes_to_detect     # These are the only classes that will be considered for classification 
         self.modelname         = modelname             # Name of the model that we are loading
+        self.mask_threshold    = mask_threshold        # Threshold for the bitwise mask in "mask rcnn"
 
         # Load the Tensorflow Model
         self.__load_model(modelname, proto_filename, classes_filename, frozengraph_filename)
@@ -141,16 +143,34 @@ class TensorflowModel:
             if confidence > self.BASE_CONFIDENCE:
                 # Class of the detection
                 class_id = int(detection[1])
-                # Box dimensions for detection
-                box = detection[3:7] * np.array([width, height, width, height])
-                (startX, startY, endX, endY) = box.astype("int")
-                
                 # Check if the classes are in the considered group
                 if self.CLASSES[class_id] in self.CLASSES_TO_DETECT:
-                    # Add to the detection list 
-                    objdetection.append({"label":self.CLASSES[class_id],
+                    
+                    # Box dimensions for detection
+                    box = detection[3:7] * np.array([width, height, width, height])
+                    (startX, startY, endX, endY) = box.astype("int")
+
+
+                    # Create a dictonary items that will be returned by the package.
+                    ret_dict = {"label":self.CLASSES[class_id],
                                         "confidence": confidence * 100,
-                                        "bbox":(startX, startY, endX, endY)})
+                                        "bbox":(startX, startY, endX, endY)}
+
+                    # If we are using "Mask-RCNN"
+                    # Extract mask and resize it such that it has same dimensions
+                    # as the bbox and then create a binary mask.                   
+                    if self.modelname == "mask-rcnn-coco":
+                        mask = masks[itr, class_id]
+                        boxW = endX - startX
+                        boxH = endY - startY
+                        mask = cv2.resize(mask, (boxW, boxH),
+                                          interpolation=cv2.INTER_NEAREST)
+                        mask = (mask > self.mask_threshold)
+                        ret_dict["mask"] = mask
+
+                    # Add to the returned list
+                    objdetection.append(ret_dict)
+                    
         print("Done!")
         return objdetection
 
