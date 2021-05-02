@@ -166,7 +166,6 @@ class TensorflowModel:
                         mask = cv2.resize(mask, (boxW, boxH),
                                           interpolation=cv2.INTER_NEAREST)
                         mask = (mask > self.mask_threshold)
-                        mask = mask.astype("uint8")
                         ret_dict["mask"] = mask
 
                     # Add to the returned list

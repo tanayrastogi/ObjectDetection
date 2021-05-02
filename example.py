@@ -42,13 +42,6 @@ for detect in detections:
 
     color = np.random.uniform(0, 255, size=(1, 3)).flatten()
 
-    # Rectangle around the objects detected
-    cv2.rectangle(clone, (startX, startY), (endX, endY), color, 2)
-    # But label abnd confidence
-    y = startY - 15 if startY - 15 > 15 else startY + 15
-    label = "{}: {:.2f}%".format(obj, confidence)
-    cv2.putText(clone, label, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
     # If we use mask rcnn then showing the mask also.
     if modelname == "mask-rcnn-coco":
         mask = detect["mask"]
@@ -58,6 +51,13 @@ for detect in detections:
         # Color for the mask
         blended = ((0.4 * color) + (0.6 * roi)).astype("uint8")
         clone[startY:endY, startX:endX][mask] = blended
+
+    # Rectangle around the objects detected
+    cv2.rectangle(clone, (startX, startY), (endX, endY), color, 2)
+    # But label abnd confidence
+    y = startY - 15 if startY - 15 > 15 else startY + 15
+    label = "{}: {:.2f}%".format(obj, confidence)
+    cv2.putText(clone, label, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
         
     print("[RESULT] ", label)
     
