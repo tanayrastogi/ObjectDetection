@@ -353,4 +353,7 @@ MigrationBackup/
 .vscode/
 
 # Ignoring model files
-ObjectDetection/models/
+models/
+
+# Ignoring files for testing 
+image.png
