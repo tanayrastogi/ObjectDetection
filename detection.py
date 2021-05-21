@@ -82,7 +82,7 @@ class TensorflowModel:
     ################
     ## Detections ##
     ################
-    def detect(self, image, imgName=None):
+    def detect(self, image, imgName=None, verbose=False):
         """
         INPUT:
             image(numpy.ndarray)    :Numpy image array with 3-channels 
@@ -108,30 +108,38 @@ class TensorflowModel:
         (height, width) = image.shape[:2]
 
         # Formating image for passing through the network for predictions
-        print("Creating blob, ", end=" ")
+        if verbose:
+            print("Creating blob, ", end=" ")
         blob = cv2.dnn.blobFromImage(image, swapRB=True, crop=False)
         self.MODEL.setInput(blob)
-        print("Getting predictions", end=" ")
+        if verbose:
+            print("Getting predictions", end=" ")
 
         # Choose the detection based on the type of metwork
         if self.modelname == "mask-rcnn-coco":
-            print("from mask rcnn, ...", end=" ")
+            if verbose:
+                print("from mask rcnn, ...", end=" ")
             (detections, masks) = self.MODEL.forward(["detection_out_final", "detection_masks"])
         elif self.modelname == "faster_rcnn_inception_v2_coco_2018_01_28":
-            print("from f-rcnn, ...", end=" ")
+            if verbose:
+                print("from f-rcnn, ...", end=" ")
             detections = self.MODEL.forward()
         else:
-            print("from unknow model, ...", end=" ")
+            if verbose:
+                print("from unknow model, ...", end=" ")
             detections = self.MODEL.forward()
-        print("Done!")
+        if verbose:
+            print("Done!")
 
-        print("[ObjD] Detections shape: {}".format(detections.shape))
-        if self.modelname == "mask-rcnn-coco":
-            print("[ObjD] Masks shape: {}".format(masks.shape))
+        if verbose:
+            print("[ObjD] Detections shape: {}".format(detections.shape))
+            if self.modelname == "mask-rcnn-coco":
+                print("[ObjD] Masks shape: {}".format(masks.shape))
         
         # After getting all the detections, gathreing label and bounding box.
         # based on base_confidence level and classes_to_detect
-        print("\n[ObjD] Checking detections on confidence level ", self.BASE_CONFIDENCE, " ...", end=" ")
+        if verbose:
+            print("\n[ObjD] Checking detections on confidence level ", self.BASE_CONFIDENCE, " ...", end=" ")
         detections = detections[0, 0]
         for itr in range(len(detections)):
             # Get the detection
@@ -170,8 +178,8 @@ class TensorflowModel:
 
                     # Add to the returned list
                     objdetection.append(ret_dict)
-                    
-        print("Done!")
+        if verbose:
+            print("Done!")
         return objdetection
 
 
