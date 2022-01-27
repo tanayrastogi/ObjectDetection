@@ -151,6 +151,8 @@ class TensorflowModel:
             if confidence > self.BASE_CONFIDENCE:
                 # Class of the detection
                 class_id = int(detection[1])
+                #print("Class {} \tID {}".format(class_id, self.CLASSES[class_id]))
+
                 # Check if the classes are in the considered group
                 if self.CLASSES[class_id] in self.CLASSES_TO_DETECT:
                     
@@ -178,8 +180,7 @@ class TensorflowModel:
 
                     # Add to the returned list
                     objdetection.append(ret_dict)
-        if verbose:
-            print("Done!")
+        print("Done!")
         return objdetection
 
 
@@ -215,16 +216,28 @@ if __name__ == "__main__":
 
     # Load image
     image = cv2.imread("image.png")
-    detections = model.detect(image, "Test Image")
 
+    # Detection on image
+    detections = model.detect(image, "Test Image")
+    print("[RESULT] Number of detections: ", len(detections))
+    
     # For showing output
     clone = image.copy()
     for detect in detections:  
         (startX, startY, endX, endY) = detect["bbox"]
-        obj = detect["label"]
+        obj_label = detect["label"]
         confidence = detect["confidence"]
-
+        
         color = np.random.uniform(0, 255, size=(1, 3)).flatten()
+
+        # Rectangle around the objects detected
+        clone = cv2.rectangle(clone, (startX, startY), (endX, endY), color, 2)
+        
+        # Put label and confidence
+        y = startY - 10 if startY - 10 > 10 else startY + 10
+        label = "{}".format(obj_label)
+        label += " {:.2f}%".format(confidence)
+        clone = cv2.putText(clone, label, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
         # If we use mask rcnn then showing the mask also.
         if modelname == "mask-rcnn-coco":
@@ -235,13 +248,6 @@ if __name__ == "__main__":
             # Color for the mask
             blended = ((0.4 * color) + (0.6 * roi)).astype("uint8")
             clone[startY:endY, startX:endX][mask] = blended
-
-        # Rectangle around the objects detected
-        cv2.rectangle(clone, (startX, startY), (endX, endY), color, 2)
-        # But label abnd confidence
-        y = startY - 15 if startY - 15 > 15 else startY + 15
-        label = "{}: {:.2f}%".format(obj, confidence)
-        cv2.putText(clone, label, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
             
         print("[RESULT] ", label)
         

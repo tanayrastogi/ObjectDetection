@@ -356,4 +356,4 @@ MigrationBackup/
 models/
 
 # Ignoring files for testing 
-image.png
+*.png

@@ -16,7 +16,8 @@ The packge needs following TF files to run in the folder *ObjectDetection/models
 -   Frozen Graph    (.pb)
 -   Classes         (.txt)
 
-Please check **exmaple.py** on how to use.
+Please check example usage in **detection.py** on how to use.
+All the classes that can be deteted are from the file "Classes.txt". Those are the labels to be mentioned in variable *classes_to_detect* as list. 
 
 ### REFERENCE
 - [Mask RCNN using OpenCV - PyImageSearch](https://www.pyimagesearch.com/2018/11/19/mask-r-cnn-with-opencv/)
